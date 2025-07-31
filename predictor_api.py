@@ -6,7 +6,9 @@ from joblib import load
 from datetime import datetime
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all domains
+
+# ✅ Enable CORS for all routes and all origins
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Load trained model
 model_path = "catboost_flight_count_predictor.joblib"
