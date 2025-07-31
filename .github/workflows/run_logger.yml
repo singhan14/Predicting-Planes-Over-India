@@ -2,8 +2,8 @@ name: Run OpenSky Logger
 
 on:
   schedule:
-    - cron: '0 * * * *'    # ⏰ Runs every hour (UTC)
-  workflow_dispatch:       # 🔘 Allow manual run from GitHub UI
+    - cron: '0 * * * *'    # ⏰ Runs at the start of every hour (UTC)
+  workflow_dispatch:       # 🔘 Allow manual run from GitHub Actions UI
 
 jobs:
   logger:
@@ -30,9 +30,9 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
-        git remote set-url origin https://${GH_TOKEN}@github.com/${{ github.repository }}
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git remote set-url origin https://${GH_TOKEN}@github.com/singhan14/opensky-logger.git
         git add opensky_india_detailed.csv
         git commit -m "🛫 Log updated on $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes"
         git push origin main
