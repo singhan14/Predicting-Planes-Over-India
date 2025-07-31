@@ -2,8 +2,8 @@ name: Run OpenSky Logger
 
 on:
   schedule:
-    - cron: '0 * * * *'    # ⏰ Runs at the start of every hour (UTC)
-  workflow_dispatch:       # 🔘 Allow manual run from GitHub Actions UI
+    - cron: '0 * * * *'    # ⏰ Runs every hour (UTC)
+  workflow_dispatch:       # 🔘 Allow manual run from GitHub UI
 
 jobs:
   logger:
