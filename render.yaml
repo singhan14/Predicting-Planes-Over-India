@@ -2,6 +2,7 @@ services:
   - type: web
     name: flight-predictor-api
     env: python
-    buildCommand: ""
-    startCommand: python predictor_api.py
     plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python predictor_api.py
+    autoDeploy: true
