@@ -3,103 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Flight Count Predictor</title>
+  <title>Flight Prediction Dashboard</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 2rem;
-      background: #f0f2f5;
-      text-align: center;
+      max-width: 700px;
+      margin: auto;
+      background-color: #f9f9f9;
+      color: #333;
     }
     h1 {
-      margin-bottom: 1.5rem;
+      color: #2c3e50;
     }
-    .loader {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      display: inline-block;
+    label {
+      display: block;
+      margin-top: 1rem;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .result {
-      margin-top: 2rem;
-      font-size: 1.2rem;
-    }
-    select, button {
-      padding: 0.5rem 1rem;
+    input, button {
+      padding: 0.5rem;
       font-size: 1rem;
-      margin: 0.5rem;
+      margin-top: 0.5rem;
+      width: 100%;
+      box-sizing: border-box;
     }
     button {
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      margin-top: 1.5rem;
       cursor: pointer;
+    }
+    button:hover {
+      background-color: #1f6391;
+    }
+    #prediction-result {
+      margin-top: 2rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background-color: #ecf0f1;
+    }
+    #loader {
+      margin-top: 1rem;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <h1>🛫 Flight Count Predictor</h1>
 
-  <label for="datetimeSelect">Select Date & Time:</label>
-  <select id="datetimeSelect"></select>
-  <button onclick="predict()">Predict</button>
-  
-  <div id="loading" style="display:none; margin-top: 1rem;"><div class="loader"></div></div>
-  <div class="result" id="result"></div>
+  <h1>🛫 Flight Count Prediction</h1>
+
+  <label for="date">📅 Select Date:</label>
+  <input type="date" id="date" required />
+
+  <label for="time">⏰ Select Time (24h):</label>
+  <input type="time" id="time" required />
+
+  <button onclick="fetchPrediction()">🔍 Generate Prediction</button>
+
+  <div id="loader" style="display: none;">⏳ Loading...</div>
+  <div id="prediction-result"></div>
 
   <script>
-    const apiURL = "https://predicting-planes-over-india-6.onrender.com/predict";
-    const dataURL = "https://singhan14.github.io/Predicting-Planes-Over-India/flight_count_per_hour.json";
+    async function fetchPrediction() {
+      const date = document.getElementById("date").value;
+      const time = document.getElementById("time").value;
+      const resultBox = document.getElementById("prediction-result");
+      const loader = document.getElementById("loader");
 
-    // Load datetime options from the JSON file
-    fetch(dataURL)
-      .then(response => response.json())
-      .then(data => {
-        const select = document.getElementById("datetimeSelect");
-        data.forEach(row => {
-          const option = document.createElement("option");
-          option.value = `${row.date_only} ${row.time_only}`;
-          option.textContent = `${row.date_only} ${row.time_only}`;
-          select.appendChild(option);
-        });
-      });
+      if (!date || !time) {
+        alert("⚠️ Please select both a date and a time.");
+        return;
+      }
 
-    function predict() {
-      const select = document.getElementById("datetimeSelect");
-      const [date, time] = select.value.split(" ");
-      const result = document.getElementById("result");
-      const loader = document.getElementById("loading");
+      const apiUrl = `https://predicting-planes-over-india-6.onrender.com/predict?date=${date}&time=${time}`;
 
-      result.innerHTML = "";
-      loader.style.display = "inline-block";
+      try {
+        loader.style.display = "block";
+        resultBox.style.color = "black";
+        resultBox.innerHTML = "";
 
-      fetch(apiURL, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ date, time })
-      })
-      .then(res => res.json())
-      .then(data => {
+        const response = await fetch(apiUrl);
         loader.style.display = "none";
-        if (data && data.predicted_flight_count !== undefined) {
-          result.innerHTML = `
-            <h3>📊 Predicted Flight Count</h3>
-            <p><strong>${data.predicted_flight_count}</strong> flights</p>
-            <p>🕓 Time: ${time} | 📅 Date: ${date}</p>
-          `;
-        } else {
-          result.innerHTML = "<p>❌ Prediction failed. Try again.</p>";
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
         }
-      })
-      .catch(err => {
+
+        const data = await response.json();
+
+        if (!data.flight_count || !data.traffic_density) {
+          throw new Error("Incomplete data from server");
+        }
+
+        resultBox.style.color = "green";
+        resultBox.innerHTML = `
+          ✅ <b>Predicted Flight Count:</b> ${data.flight_count}<br/>
+          🛰️ <b>Traffic Density:</b> ${data.traffic_density}<br/>
+        `;
+      } catch (error) {
+        console.error("❌ Error fetching prediction:", error);
         loader.style.display = "none";
-        result.innerHTML = `<p style="color:red;">❌ Error: ${err.message}</p>`;
-      });
+        resultBox.style.color = "red";
+        resultBox.innerHTML = `❌ Error: ${error.message}`;
+      }
     }
   </script>
+
 </body>
 </html>
