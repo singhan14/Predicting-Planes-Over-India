@@ -1,26 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Flight Count Prediction</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flight Count Predictor Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      padding: 2rem;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    .flex { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .input-row { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; }
+    button {
+      background: #007bff;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    #loader { display: none; color: #007bff; font-weight: bold; }
+    canvas { max-width: 100%; height: 400px !important; }
+  </style>
 </head>
 <body>
-  <h1>🛫 India Flight Prediction Dashboard</h1>
-  <form id="predictForm">
-    <label>Date: <input type="date" id="dateInput" required></label>
-    <label>Time: <input type="time" id="timeInput" required></label>
-    <button type="submit">Generate Prediction</button>
-  </form>
 
-  <section id="results" hidden>
-    <h2>📊 Results</h2>
-    <p><strong>Predicted Flight Count:</strong> <span id="count"></span></p>
-    <canvas id="timelineChart" height="100"></canvas>
-  </section>
+  <div class="card">
+    <h2>🛫 Flight Count Predictor</h2>
+    <div class="input-row">
+      <label for="date">Date:</label>
+      <input type="date" id="date" required>
+      <label for="time">Time:</label>
+      <input type="time" id="time" required>
+      <button onclick="predict()">Generate Prediction</button>
+      <span id="loader">Analyzing...</span>
+    </div>
+    <div id="predictionResult"></div>
+  </div>
 
-  <script src="script.js"></script>
+  <div class="card">
+    <h3>📊 24-Hour Prediction Timeline</h3>
+    <canvas id="timelineChart"></canvas>
+  </div>
+
+  <script>
+    const apiUrl = 'https://predictor-api-onrender-url/predict'; // Replace with your deployed Render URL
+    const jsonUrl = 'https://raw.githubusercontent.com/singhan14/Predicting-Planes-Over-India/main/flight_count_per_hour.json';
+
+    async function predict() {
+      const date = document.getElementById('date').value;
+      const time = document.getElementById('time').value;
+      const resultDiv = document.getElementById('predictionResult');
+      const loader = document.getElementById('loader');
+
+      if (!date || !time) return alert('Please select both date and time.');
+
+      loader.style.display = 'inline';
+      resultDiv.innerHTML = '';
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date, time })
+        });
+
+        if (!response.ok) throw new Error("API Error: " + response.statusText);
+
+        const data = await response.json();
+        resultDiv.innerHTML = `
+          <p><strong>Predicted Flight Count:</strong> ${data.predicted_flight_count}</p>
+          <p><strong>Traffic Density:</strong> ${data.traffic_density || '--'}</p>
+        `;
+      } catch (err) {
+        resultDiv.innerHTML = `<p style="color:red">❌ Prediction failed: ${err.message}</p>`;
+      } finally {
+        loader.style.display = 'none';
+      }
+    }
+
+    // Load 24-Hour Timeline Chart
+    async function loadChart() {
+      const response = await fetch(jsonUrl);
+      const jsonData = await response.json();
+      const labels = jsonData.map(d => d.time_only);
+      const data = jsonData.map(d => d.predicted_count);
+
+      new Chart(document.getElementById('timelineChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Predicted Flight Count',
+            data,
+            borderColor: '#007bff',
+            fill: false,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { title: { display: true, text: 'Time' } },
+            y: { title: { display: true, text: 'Flights' }, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    loadChart();
+  </script>
 </body>
 </html>
