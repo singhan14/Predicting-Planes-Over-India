@@ -1,4 +1,4 @@
-# ✈️ Predicting Planes Over India - Hourly
+# ✈️ Predicting Planes Over India
 
 A real-time aircraft tracking and prediction system that monitors air traffic over India using the OpenSky Network API. This project automatically collects, analyzes, and predicts flight patterns with hourly data updates.
 
