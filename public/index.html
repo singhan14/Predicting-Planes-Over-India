@@ -1,124 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flight Count Predictor Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flight Count Predictor</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f8f9fa;
       padding: 2rem;
+      background: #f0f2f5;
+      text-align: center;
     }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 2rem;
+    h1 {
+      margin-bottom: 1.5rem;
     }
-    .flex { display: flex; gap: 1rem; flex-wrap: wrap; }
-    .input-row { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; }
-    button {
-      background: #007bff;
-      color: white;
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .result {
+      margin-top: 2rem;
+      font-size: 1.2rem;
+    }
+    select, button {
       padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 6px;
+      font-size: 1rem;
+      margin: 0.5rem;
+    }
+    button {
       cursor: pointer;
     }
-    button:disabled { background: #ccc; cursor: not-allowed; }
-    #loader { display: none; color: #007bff; font-weight: bold; }
-    canvas { max-width: 100%; height: 400px !important; }
   </style>
 </head>
 <body>
+  <h1>🛫 Flight Count Predictor</h1>
 
-  <div class="card">
-    <h2>🛫 Flight Count Predictor</h2>
-    <div class="input-row">
-      <label for="date">Date:</label>
-      <input type="date" id="date" required>
-      <label for="time">Time:</label>
-      <input type="time" id="time" required>
-      <button onclick="predict()">Generate Prediction</button>
-      <span id="loader">Analyzing...</span>
-    </div>
-    <div id="predictionResult"></div>
-  </div>
-
-  <div class="card">
-    <h3>📊 24-Hour Prediction Timeline</h3>
-    <canvas id="timelineChart"></canvas>
-  </div>
+  <label for="datetimeSelect">Select Date & Time:</label>
+  <select id="datetimeSelect"></select>
+  <button onclick="predict()">Predict</button>
+  
+  <div id="loading" style="display:none; margin-top: 1rem;"><div class="loader"></div></div>
+  <div class="result" id="result"></div>
 
   <script>
-    const apiUrl = 'https://predictor-api-onrender-url/predict'; // Replace with your deployed Render URL
-    const jsonUrl = 'https://raw.githubusercontent.com/singhan14/Predicting-Planes-Over-India/main/flight_count_per_hour.json';
+    const apiURL = "https://predicting-planes-over-india-6.onrender.com/predict";
+    const dataURL = "https://singhan14.github.io/Predicting-Planes-Over-India/flight_count_per_hour.json";
 
-    async function predict() {
-      const date = document.getElementById('date').value;
-      const time = document.getElementById('time').value;
-      const resultDiv = document.getElementById('predictionResult');
-      const loader = document.getElementById('loader');
-
-      if (!date || !time) return alert('Please select both date and time.');
-
-      loader.style.display = 'inline';
-      resultDiv.innerHTML = '';
-
-      try {
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ date, time })
+    // Load datetime options from the JSON file
+    fetch(dataURL)
+      .then(response => response.json())
+      .then(data => {
+        const select = document.getElementById("datetimeSelect");
+        data.forEach(row => {
+          const option = document.createElement("option");
+          option.value = `${row.date_only} ${row.time_only}`;
+          option.textContent = `${row.date_only} ${row.time_only}`;
+          select.appendChild(option);
         });
+      });
 
-        if (!response.ok) throw new Error("API Error: " + response.statusText);
+    function predict() {
+      const select = document.getElementById("datetimeSelect");
+      const [date, time] = select.value.split(" ");
+      const result = document.getElementById("result");
+      const loader = document.getElementById("loading");
 
-        const data = await response.json();
-        resultDiv.innerHTML = `
-          <p><strong>Predicted Flight Count:</strong> ${data.predicted_flight_count}</p>
-          <p><strong>Traffic Density:</strong> ${data.traffic_density || '--'}</p>
-        `;
-      } catch (err) {
-        resultDiv.innerHTML = `<p style="color:red">❌ Prediction failed: ${err.message}</p>`;
-      } finally {
-        loader.style.display = 'none';
-      }
-    }
+      result.innerHTML = "";
+      loader.style.display = "inline-block";
 
-    // Load 24-Hour Timeline Chart
-    async function loadChart() {
-      const response = await fetch(jsonUrl);
-      const jsonData = await response.json();
-      const labels = jsonData.map(d => d.time_only);
-      const data = jsonData.map(d => d.predicted_count);
-
-      new Chart(document.getElementById('timelineChart'), {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Predicted Flight Count',
-            data,
-            borderColor: '#007bff',
-            fill: false,
-            tension: 0.3
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            x: { title: { display: true, text: 'Time' } },
-            y: { title: { display: true, text: 'Flights' }, beginAtZero: true }
-          }
+      fetch(apiURL, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ date, time })
+      })
+      .then(res => res.json())
+      .then(data => {
+        loader.style.display = "none";
+        if (data && data.predicted_flight_count !== undefined) {
+          result.innerHTML = `
+            <h3>📊 Predicted Flight Count</h3>
+            <p><strong>${data.predicted_flight_count}</strong> flights</p>
+            <p>🕓 Time: ${time} | 📅 Date: ${date}</p>
+          `;
+        } else {
+          result.innerHTML = "<p>❌ Prediction failed. Try again.</p>";
         }
+      })
+      .catch(err => {
+        loader.style.display = "none";
+        result.innerHTML = `<p style="color:red;">❌ Error: ${err.message}</p>`;
       });
     }
-
-    loadChart();
   </script>
 </body>
 </html>
