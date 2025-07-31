@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pandas as pd
 import os
 from joblib import load
 from datetime import datetime
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all domains
 
 # Load trained model
 model_path = "catboost_flight_count_predictor.joblib"
@@ -45,7 +47,6 @@ def predict():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
