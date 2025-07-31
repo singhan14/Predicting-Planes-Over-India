@@ -1,40 +1,36 @@
 async function fetchPrediction() {
   const date = document.getElementById("date").value;
   const time = document.getElementById("time").value;
-  const resultBox = document.getElementById("prediction-result");
 
   if (!date || !time) {
-    alert("⚠️ Please select both a date and a time.");
+    alert("Please select both date and time.");
     return;
   }
 
-  const apiUrl = `https://predicting-planes-over-india-6.onrender.com/predict?date=${date}&time=${time}`;
+  const apiUrl = "https://predicting-planes-over-india-6.onrender.com/predict";
 
   try {
-    resultBox.style.color = "black";
-    resultBox.innerHTML = "⏳ Fetching prediction...";
+    document.getElementById("prediction-result").innerHTML = "⏳ Loading...";
 
-    const response = await fetch(apiUrl);
-    
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ date, time }),
+    });
+
     if (!response.ok) {
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
+      throw new Error(`API error: ${response.statusText}`);
     }
 
     const data = await response.json();
 
-    // Basic validation of expected fields
-    if (!data.flight_count || !data.traffic_density) {
-      throw new Error("Incomplete data from server");
-    }
-
-    resultBox.style.color = "green";
-    resultBox.innerHTML = `
-      ✅ <b>Predicted Flight Count:</b> ${data.flight_count}<br/>
-      🛰️ <b>Traffic Density:</b> ${data.traffic_density}<br/>
+    document.getElementById("prediction-result").innerHTML = `
+      ✅ Predicted Flight Count: <b>${data.predicted_flight_count}</b><br/>
     `;
   } catch (error) {
-    console.error("❌ Error fetching prediction:", error);
-    resultBox.style.color = "red";
-    resultBox.innerHTML = `❌ Error: ${error.message}`;
+    console.error("Error:", error);
+    document.getElementById("prediction-result").innerHTML = `❌ Error: ${error.message}`;
   }
 }
