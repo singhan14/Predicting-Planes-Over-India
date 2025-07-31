@@ -1,41 +1,40 @@
-document.getElementById("predictForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+async function fetchPrediction() {
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+  const resultBox = document.getElementById("prediction-result");
 
-  const date = document.getElementById("dateInput").value;
-  const time = document.getElementById("timeInput").value;
+  if (!date || !time) {
+    alert("⚠️ Please select both a date and a time.");
+    return;
+  }
 
-  const response = await fetch("https://predicting-planes-over-india-6.onrender.com", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ date, time })
-  });
+  const apiUrl = `https://predicting-planes-over-india-6.onrender.com/predict?date=${date}&time=${time}`;
 
-  const data = await response.json();
-  document.getElementById("results").hidden = false;
-  document.getElementById("count").textContent = data.predicted_count;
+  try {
+    resultBox.style.color = "black";
+    resultBox.innerHTML = "⏳ Fetching prediction...";
 
-  // Chart.js - example 24 hour prediction dummy chart
-  const timeline = data.timeline || Array.from({ length: 24 }, (_, i) => ({
-    hour: i,
-    count: Math.round(Math.random() * 100)  // replace with actual timeline data if available
-  }));
-
-  const ctx = document.getElementById("timelineChart").getContext("2d");
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: timeline.map(d => `${d.hour}:00`),
-      datasets: [{
-        label: "Flight Count",
-        data: timeline.map(d => d.count),
-        borderColor: "blue",
-        tension: 0.3,
-        fill: false
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } }
+    const response = await fetch(apiUrl);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
-  });
-});
+
+    const data = await response.json();
+
+    // Basic validation of expected fields
+    if (!data.flight_count || !data.traffic_density) {
+      throw new Error("Incomplete data from server");
+    }
+
+    resultBox.style.color = "green";
+    resultBox.innerHTML = `
+      ✅ <b>Predicted Flight Count:</b> ${data.flight_count}<br/>
+      🛰️ <b>Traffic Density:</b> ${data.traffic_density}<br/>
+    `;
+  } catch (error) {
+    console.error("❌ Error fetching prediction:", error);
+    resultBox.style.color = "red";
+    resultBox.innerHTML = `❌ Error: ${error.message}`;
+  }
+}
