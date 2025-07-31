@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flight Count Prediction</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>🛫 India Flight Prediction Dashboard</h1>
+  <form id="predictForm">
+    <label>Date: <input type="date" id="dateInput" required></label>
+    <label>Time: <input type="time" id="timeInput" required></label>
+    <button type="submit">Generate Prediction</button>
+  </form>
+
+  <section id="results" hidden>
+    <h2>📊 Results</h2>
+    <p><strong>Predicted Flight Count:</strong> <span id="count"></span></p>
+    <canvas id="timelineChart" height="100"></canvas>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
