@@ -45,15 +45,7 @@ predicting-planes-over-india-hourly/
 ├── .github/
 │   └── workflows/
 │       └── opensky-logger.yml      # Automated data collection workflow
-├── data/
-│   └── opensky_india_detailed.csv  # Historical flight data
-├── src/
-│   ├── opensky_logger_detailed.py  # Main data collection script
-│   ├── data_analysis.py            # Data analysis and visualization
-│   └── prediction_models.py        # Machine learning models
-├── notebooks/
-│   ├── exploratory_analysis.ipynb  # Data exploration
-│   └── model_development.ipynb     # Model training and testing
+├── opensky_india_detailed.csv      # Historical flight data
 ├── requirements.txt                # Python dependencies
 └── README.md                      # Project documentation
 ```
