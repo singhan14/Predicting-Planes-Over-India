@@ -4,5 +4,5 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python predictor_api.py
+    startCommand: gunicorn -w 4 -b 0.0.0.0:10000 predictor_api:app
     autoDeploy: true
