@@ -2,12 +2,11 @@
 
 import pandas as pd
 import os
-from pathlib import Path
 import json
 from joblib import load
 
 # Load CatBoost model from joblib
-model_path = "models/catboost_flight_count_predictor.joblib"
+model_path = "catboost_flight_count_predictor.joblib"
 model = load(model_path) if os.path.exists(model_path) else None
 
 # Step 1: Load latest CSV from GitHub raw URL
@@ -41,14 +40,13 @@ if model:
     time_features['predicted_count'] = model.predict(X)
 
 # Step 6: Save results
-Path("predictions").mkdir(exist_ok=True)
 
 # Save as CSV
-time_features.to_csv("predictions/flight_count_per_minute.csv", index=False)
+time_features.to_csv("flight_count_per_minute.csv", index=False)
 
 # Save as JSON (for dashboard)
 json_data = time_features.to_dict(orient="records")
-with open("predictions/flight_count_per_minute.json", "w") as f:
+with open("flight_count_per_minute.json", "w") as f:
     json.dump(json_data, f, indent=2, default=str)
 
-print("✅ Prediction results saved to /predictions/")
+print("✅ Prediction results saved as CSV and JSON")
