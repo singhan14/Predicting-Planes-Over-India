@@ -6,9 +6,7 @@ from joblib import load
 from datetime import datetime
 
 app = Flask(__name__)
-
-# ✅ Enable CORS for all routes and all origins
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app)  # Enable CORS for all origins
 
 # Load trained model
 model_path = "catboost_flight_count_predictor.joblib"
@@ -18,15 +16,24 @@ model = load(model_path) if os.path.exists(model_path) else None
 def home():
     return jsonify({"message": "Flight Predictor API is running."})
 
-@app.route("/predict", methods=["POST"])
+@app.route("/predict", methods=["GET", "POST"])
 def predict():
     if not model:
         return jsonify({"error": "Model not found"}), 500
 
     try:
-        data = request.json
-        date_str = data.get("date")  # Format: YYYY-MM-DD
-        time_str = data.get("time")  # Format: HH:MM
+        if request.method == "POST":
+            data = request.get_json()
+            date_str = data.get("date")
+            time_str = data.get("time")
+        elif request.method == "GET":
+            date_str = request.args.get("date")
+            time_str = request.args.get("time")
+        else:
+            return jsonify({"error": "Invalid request method"}), 405
+
+        if not date_str or not time_str:
+            return jsonify({"error": "Missing date or time"}), 400
 
         # Parse inputs
         date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
