@@ -1,0 +1,52 @@
+[
+  {
+    "date_only": "2025-07-31",
+    "time_only": "08:37",
+    "flight_count_per_minute": 196.0
+  },
+  {
+    "date_only": "2025-07-31",
+    "time_only": "09:33",
+    "flight_count_per_minute": 208.0
+  },
+  {
+    "date_only": "2025-07-31",
+    "time_only": "10:31",
+    "flight_count_per_minute": 213.0
+  },
+  {
+    "date_only": "2025-07-31",
+    "time_only": "11:25",
+    "flight_count_per_minute": 189.0
+  },
+  {
+    "date_only": "2025-07-31",
+    "time_only": "12:51",
+    "flight_count_per_minute": 178.0
+  },
+  {
+    "date_only": "2025-07-31",
+    "time_only": "12:58",
+    "flight_count_per_minute": 169.0
+  },
+  {
+    "date_only": "2025-07-31",
+    "time_only": "13:47",
+    "flight_count_per_minute": 189.0
+  },
+  {
+    "date_only": "2025-07-31",
+    "time_only": "14:29",
+    "flight_count_per_minute": 210.0
+  },
+  {
+    "date_only": "2025-07-31",
+    "time_only": "15:30",
+    "flight_count_per_minute": 189.0
+  },
+  {
+    "date_only": "2025-07-31",
+    "time_only": "16:36",
+    "flight_count_per_minute": 181.0
+  }
+]
