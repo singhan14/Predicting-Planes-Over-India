@@ -1,44 +1,52 @@
-from flask import Flask, jsonify
+from flask import Flask, request, jsonify
 import pandas as pd
 import os
-import json
 from joblib import load
+from datetime import datetime
 
 app = Flask(__name__)
 
+# Load trained model
 model_path = "catboost_flight_count_predictor.joblib"
-model = load(model_path)
+model = load(model_path) if os.path.exists(model_path) else None
 
 @app.route("/")
-def index():
-    return jsonify({"message": "Flight Prediction API is running."})
+def home():
+    return jsonify({"message": "Flight Predictor API is running."})
 
-@app.route("/predict")
+@app.route("/predict", methods=["POST"])
 def predict():
-    csv_url = "https://raw.githubusercontent.com/singhan14/Predicting-Planes-Over-India/main/opensky_india_detailed.csv"
-    df = pd.read_csv(csv_url)
+    if not model:
+        return jsonify({"error": "Model not found"}), 500
 
-    df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-    df.dropna(subset=['timestamp'], inplace=True)
+    try:
+        data = request.json
+        date_str = data.get("date")  # Format: YYYY-MM-DD
+        time_str = data.get("time")  # Format: HH:MM
 
-    df['date_only'] = df['timestamp'].dt.date
-    df['time_only'] = df['timestamp'].dt.strftime('%H:%M')
-    df['minute_timestamp'] = df['timestamp'].dt.floor('min')
+        # Parse inputs
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+        hour = int(time_str.split(":")[0])
+        minute = int(time_str.split(":")[1])
 
-    minute_flight_counts = df.groupby('minute_timestamp').size().reset_index(name='flight_count_per_minute')
-    df = pd.merge(df, minute_flight_counts, on='minute_timestamp', how='left')
+        # Create input DataFrame
+        date_ordinal = pd.Timestamp(date_obj).toordinal()
+        input_df = pd.DataFrame([[date_ordinal, hour, minute]],
+                                columns=["date_ordinal", "hour", "minute"])
 
-    time_features = df.groupby(['date_only', 'time_only'])['flight_count_per_minute'].mean().reset_index()
+        # Predict
+        prediction = model.predict(input_df)[0]
 
-    time_features['date_ordinal'] = pd.to_datetime(time_features['date_only']).map(pd.Timestamp.toordinal)
-    time_features['hour'] = time_features['time_only'].str.slice(0, 2).astype(int)
-    time_features['minute'] = time_features['time_only'].str.slice(3, 5).astype(int)
+        return jsonify({
+            "date": date_str,
+            "time": time_str,
+            "predicted_flight_count": round(float(prediction), 2)
+        })
 
-    X = time_features[['date_ordinal', 'hour', 'minute']]
-    time_features['predicted_count'] = model.predict(X)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
-    json_data = time_features.to_dict(orient="records")
-    return jsonify(json_data)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
