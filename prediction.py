@@ -31,15 +31,16 @@ time_features = df.groupby(['date_only', 'time_only'])['flight_count_per_minute'
 
 # Predict using the loaded model
 if model:
-    # Assuming model expects 'date_only' (as ordinal) and 'time_only' (HH:MM string converted to hour + minute)
+    # Use date_only and time_only to extract model features
     time_features['date_ordinal'] = pd.to_datetime(time_features['date_only']).map(pd.Timestamp.toordinal)
     time_features['hour'] = time_features['time_only'].str.slice(0, 2).astype(int)
     time_features['minute'] = time_features['time_only'].str.slice(3, 5).astype(int)
 
+    # Prepare input and predict
     X = time_features[['date_ordinal', 'hour', 'minute']]
     time_features['predicted_count'] = model.predict(X)
 
-# Step 6: Save results
+# Step 6: Save results to root directory (no /predictions folder)
 
 # Save as CSV
 time_features.to_csv("flight_count_per_minute.csv", index=False)
@@ -49,4 +50,4 @@ json_data = time_features.to_dict(orient="records")
 with open("flight_count_per_minute.json", "w") as f:
     json.dump(json_data, f, indent=2, default=str)
 
-print("✅ Prediction results saved as CSV and JSON")
+print("✅ Prediction results saved as CSV and JSON in root directory")
