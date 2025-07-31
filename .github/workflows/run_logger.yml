@@ -1,0 +1,35 @@
+name: Run OpenSky Logger
+
+on:
+  schedule:
+    - cron: '0 * * * *'    # ⏰ Runs at the start of every hour (UTC)
+  workflow_dispatch:       # 🔘 Allow manual run from GitHub Actions UI
+
+jobs:
+  logger:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run the logger script
+      run: |
+        python opensky_logger_detailed.py
+
+    - name: Commit updated CSV
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add opensky_india_detailed.csv
+        git commit -m "🛫 Log updated on $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes to commit"
+        git push
