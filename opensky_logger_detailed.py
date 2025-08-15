@@ -48,10 +48,12 @@ def log_planes_over_india_detailed():
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
-        data = response.json()
-    except Exception as e:
-        print("Error fetching OpenSky data:", e)
-        return
+
+    data = response.json()
+
+if not data or "states" not in data or data["states"] is None:
+    print("No valid 'states' data returned from OpenSky API.")
+    return
 
     timestamp = datetime.now(timezone.utc)
     timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S")
